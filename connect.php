@@ -3,13 +3,16 @@ $host = getenv('DB_HOST');
 $user = getenv('DB_USER');
 $pass = getenv('DB_PASS');
 $db   = getenv('DB_NAME');
-$port = (int) getenv('DB_PORT'); // Fetch the custom port from Render Env Vars
+$port = (int) getenv('DB_PORT');
 
-// Initialize and enforce SSL
 $conn = mysqli_init();
-mysqli_ssl_set($conn, NULL, NULL, NULL, NULL, NULL);
 
-// Pass the port as the 6th argument and MYSQLI_CLIENT_SSL as the 8th
+// Point to the CA certificate file you downloaded from Aiven
+// You must upload this ca.pem file to your Render project root and push it
+$ca_path = __DIR__ . '/ca.pem'; 
+
+mysqli_ssl_set($conn, NULL, NULL, $ca_path, NULL, NULL);
+
 $conn->real_connect($host, $user, $pass, $db, $port, NULL, MYSQLI_CLIENT_SSL);
 
 if ($conn->connect_error) {
