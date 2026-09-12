@@ -15,7 +15,7 @@ if ($onRender) {
     );
 } else {
     // Local XAMPP
-    $conn = new mysqli('localhost', 'root', '5251', 'login', 3306);
+    $conn = new mysqli('localhost', 'root', '1234', 'login', 3306);
 }
 
 if ($conn->connect_error) {
