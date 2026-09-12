@@ -2,6 +2,10 @@
 session_start();
 include("connect.php");
 
+if (!isset($_SESSION['email'])) {
+    header("Location: index.php");
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -19,7 +23,7 @@ include("connect.php");
         $email=$_SESSION['email'];
         $query=mysqli_query($conn, "SELECT * FROM users WHERE email='$email'");
         while($row=mysqli_fetch_array($query)){
-            echo $row['firstName'].''.$row['lastName'];
+            echo $row['firstName'] . ' ' . $row['lastName'];
         }
     }
     ?>

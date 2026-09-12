@@ -2,45 +2,54 @@
 session_start();
 include 'connect.php';
 
-if(isset($_POST['signUp'])){
-    $firstName=$_POST['fName'];
-    $lastName=$_POST['lName'];
-    $email=$_POST['email'];
-    $password=$_POST['password'];
-    $password=md5($password);
+// ─── REGISTER ────────────────────────────────────────────────
+if (isset($_POST['signUp'])) {
+    $firstName = $_POST['fName'];
+    $lastName  = $_POST['lName'];
+    $email     = $_POST['email'];
+    $password  = password_hash($_POST['password'], PASSWORD_DEFAULT);  // ✅ secure hash
 
-    $checkEmail="SELECT * From users where email='$email'";
-    $result=$conn->query($checkEmail);
-    if($result->num_rows>0){
+    $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
         echo "Email address already exists";
-    }
-    else{
-        $insertQuery="INSERT INTO users(firstName, lastName, email, password) VALUES ('$firstName', '$lastName', '$email','$password')";
-        if($conn->query($insertQuery)==TRUE){
-            header('location: index.php');
-        }
-        else{
-            echo "Error:".$conn->error;
+    } else {
+        $stmt = $conn->prepare("INSERT INTO users (firstName, lastName, email, password) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $firstName, $lastName, $email, $password);
+
+        if ($stmt->execute()) {
+            header('Location: index.php');
+            exit();
+        } else {
+            echo "Error: " . $conn->error;
         }
     }
 }
 
-if(isset($_POST['signIn'])){
-    $email=$_POST['email'];
-    $password=$_POST['password'];
-    $password=md5($password);
+// ─── LOGIN ───────────────────────────────────────────────────
+if (isset($_POST['signIn'])) {
+    $email    = $_POST['email'];
+    $password = $_POST['password'];
 
-    $sql="SELECT * FROM users WHERE email='$email' and password='$password'";
-    $result=$conn->query($sql);
-    if($result->num_rows>0){
-        
-        $row=$result->fetch_assoc();
-        $_SESSION['email']=$row['email'];
-        header("location: homepage.php");
-        exit();
+    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+
+        if (password_verify($password, $row['password'])) {   // ✅ verify hash
+            session_regenerate_id(true);
+            $_SESSION['email'] = $row['email'];
+            header("Location: homepage.php");
+            exit();
+        }
     }
-    else{
-        echo "Not found, incorrect email or password";
-    }
+
+    echo "Not found, incorrect email or password";
 }
 ?>
