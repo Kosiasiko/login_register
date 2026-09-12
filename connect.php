@@ -1,19 +1,22 @@
 <?php
-$host = getenv('DB_HOST');
-$user = getenv('DB_USER');
-$pass = getenv('DB_PASS');
-$db   = getenv('DB_NAME');
-$port = (int) getenv('DB_PORT');
+$onRender = getenv('DB_HOST') !== false;
 
-$conn = mysqli_init();
-
-// Point to the CA certificate file you downloaded from Aiven
-// You must upload this ca.pem file to your Render project root and push it
-$ca_path = __DIR__ . '/ca.pem'; 
-
-mysqli_ssl_set($conn, NULL, NULL, $ca_path, NULL, NULL);
-
-$conn->real_connect($host, $user, $pass, $db, $port, NULL, MYSQLI_CLIENT_SSL);
+if ($onRender) {
+    // Render → Aiven MySQL (SSL)
+    $conn = mysqli_init();
+    $conn->real_connect(
+        getenv('DB_HOST'),
+        getenv('DB_USER'),
+        getenv('DB_PASS'),
+        getenv('DB_NAME'),
+        (int) getenv('DB_PORT'),
+        NULL,
+        MYSQLI_CLIENT_SSL
+    );
+} else {
+    // Local XAMPP
+    $conn = new mysqli('localhost', 'root', '5251', 'login', 3306);
+}
 
 if ($conn->connect_error) {
     die('Connection failed: ' . $conn->connect_error);
